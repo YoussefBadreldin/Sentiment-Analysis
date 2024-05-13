@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[1]:
 
 
 import tkinter as tk
@@ -16,9 +16,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 import joblib
 from collections import Counter
+from tkinter import filedialog
 
 
-# In[4]:
+# In[2]:
 
 
 import nltk
@@ -27,7 +28,7 @@ from nltk.corpus import stopwords
 import string
 
 
-# In[5]:
+# In[3]:
 
 
 import nltk
@@ -56,75 +57,97 @@ class SentimentAnalyzerGUI:
         self.entry_airline.grid(row=0, column=1, padx=10, pady=5)
 
         self.button_analyze = ttk.Button(self.root, text="Analyze", command=self.analyze_sentiment)
-        self.button_analyze.grid(row=0, column=2, padx=10, pady=5)
+        self.button_analyze.grid(row=1, column=2, padx=10, pady=5)
 
         self.label_result = ttk.Label(self.root, text="")
-        self.label_result.grid(row=1, column=0, columnspan=3, padx=10, pady=5)
+        self.label_result.grid(row=2, column=0, columnspan=3, padx=10, pady=5)
         
         self.label_sentiment = ttk.Label(self.root, text="Overall Sentiment: ")
-        self.label_sentiment.grid(row=2, column=0, columnspan=3, padx=10, pady=5)
+        self.label_sentiment.grid(row=3, column=0, columnspan=3, padx=10, pady=5)
 
         self.label_info = ttk.Label(self.root, text="Additional Analysis Options:")
-        self.label_info.grid(row=2, column=0, columnspan=3, padx=10, pady=5, sticky="w")
+        self.label_info.grid(row=3, column=0, columnspan=3, padx=10, pady=5, sticky="w")
 
         self.button_overall_sentiment = ttk.Button(self.root, text="Overall Sentiment Trend", command=self.show_overall_sentiment_trend)
-        self.button_overall_sentiment.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.button_overall_sentiment.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
         self.button_keywords = ttk.Button(self.root, text="Top Keywords", command=self.show_top_keywords)
-        self.button_keywords.grid(row=3, column=1, padx=10, pady=5)
+        self.button_keywords.grid(row=4, column=1, padx=10, pady=5)
 
         self.button_comparison = ttk.Button(self.root, text="Comparison with Competitors", command=self.show_comparison)
-        self.button_comparison.grid(row=3, column=2, padx=10, pady=5, sticky="e")
+        self.button_comparison.grid(row=4, column=2, padx=10, pady=5, sticky="e")
 
         self.button_sentiment_dist = ttk.Button(self.root, text="Sentiment Distribution", command=self.show_sentiment_distribution)
-        self.button_sentiment_dist.grid(row=4, column=0, padx=10, pady=5, sticky="w")
-
-        self.button_emerging_trends = ttk.Button(self.root, text="Identify Emerging Trends", command=self.identify_emerging_trends)
-        self.button_emerging_trends.grid(row=4, column=1, padx=10, pady=5)
+        self.button_sentiment_dist.grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
         self.button_save_results = ttk.Button(self.root, text="Save Results", command=self.save_results)
-        self.button_save_results.grid(row=4, column=2, padx=10, pady=5, sticky="e")
+        self.button_save_results.grid(row=5, column=2, padx=10, pady=5, sticky="e")
 
+        self.label_custom_text = ttk.Label(self.root, text="Enter custom text:")
+        self.label_custom_text.grid(row=6, column=0, padx=10, pady=5, sticky="w")
+        
+        self.entry_custom_text = ttk.Entry(self.root, width=50)
+        self.entry_custom_text.grid(row=6, column=1, columnspan=2, padx=10, pady=5)
+        
+        self.button_analyze_text = ttk.Button(self.root, text="Analyze Text", command=self.analyze_text_sentiment)
+        self.button_analyze_text.grid(row=7, column=2, padx=10, pady=5)
+        
+        self.label_text_result = ttk.Label(self.root, text="")
+        self.label_text_result.grid(row=7, column=0, columnspan=3, padx=10, pady=5)
+        
         # Initialize attributes
-        self.dataset = pd.read_csv("Tweets.csv")  # Change to your dataset file
-        self.vectorizer = joblib.load("my_vectorizer.pkl")  # Change to your vectorizer file
-        self.model = joblib.load("my_model.pkl")  # Change to your model file
+        self.dataset = pd.read_csv("Tweets.csv") 
+        self.vectorizer = joblib.load("my_vectorizer.pkl")  
+        self.model = joblib.load("my_model.pkl")
 
     def analyze_sentiment(self):
-            airline_name = self.entry_airline.get()
-            if airline_name:
-                airline_tweets = self.dataset[self.dataset["airline"] == airline_name]
-                if not airline_tweets.empty:
-                    tweet_texts = airline_tweets["text"]
-                    tweet_vectors = self.vectorizer.transform(tweet_texts)
-                    predictions = self.model.predict(tweet_vectors)
+        airline_name = self.entry_airline.get()
+        custom_text = self.entry_custom_text.get()
 
-                    # Count the number of each sentiment
-                    positive_count = sum(predictions == "positive")
-                    negative_count = sum(predictions == "negative")
-                    neutral_count = sum(predictions == "neutral")
-                    total_count = len(predictions)
+        if airline_name:
+            airline_tweets = self.dataset[self.dataset["airline"] == airline_name]
+            if not airline_tweets.empty:
+                tweet_texts = airline_tweets["text"]
+                tweet_vectors = self.vectorizer.transform(tweet_texts)
+                predictions = self.model.predict(tweet_vectors)
 
-                    # Calculate percentages
-                    positive_percentage = positive_count / total_count * 100
-                    negative_percentage = negative_count / total_count * 100
-                    neutral_percentage = neutral_count / total_count * 100
-                    result = f"Positive: {positive_percentage:.2f}%  Negative: {negative_percentage:.2f}%  Neutral: {neutral_percentage:.2f}%"
-                    self.label_result.config(text=result)
+                # Count the number of each sentiment
+                positive_count = sum(predictions == "positive")
+                negative_count = sum(predictions == "negative")
+                neutral_count = sum(predictions == "neutral")
+                total_count = len(predictions)
 
-                    # Determine overall sentiment
-                    if positive_percentage > negative_percentage and positive_percentage > neutral_percentage:
-                        overall_sentiment = "Positive"
-                    elif negative_percentage > positive_percentage and negative_percentage > neutral_percentage:
-                        overall_sentiment = "Negative"
-                    else:
-                        overall_sentiment = "Neutral"
+                # Calculate percentages
+                positive_percentage = positive_count / total_count * 100
+                negative_percentage = negative_count / total_count * 100
+                neutral_percentage = neutral_count / total_count * 100
+                result = f"Positive: {positive_percentage:.2f}%  Negative: {negative_percentage:.2f}%  Neutral: {neutral_percentage:.2f}%"
+                self.label_result.config(text=result)
 
-                    self.label_sentiment.config(text=f"Overall Sentiment: {overall_sentiment}")
+                # Determine overall sentiment
+                if positive_percentage > negative_percentage and positive_percentage > neutral_percentage:
+                    overall_sentiment = "Positive"
+                elif negative_percentage > positive_percentage and negative_percentage > neutral_percentage:
+                    overall_sentiment = "Negative"
                 else:
-                    messagebox.showerror("Error", "No tweets found for the specified airline.")
+                    overall_sentiment = "Neutral"
+
+                self.label_sentiment.config(text=f"Overall Sentiment: {overall_sentiment}")
             else:
-                messagebox.showerror("Error", "Please enter the name of an airline.")
+                messagebox.showerror("Error", "No tweets found for the specified airline.")
+
+        else:
+            messagebox.showerror("Error", "Please enter the name of an airline or some custom text.")
+            
+    def analyze_text_sentiment(self):
+        custom_text = self.entry_custom_text.get()
+        if custom_text:
+            custom_text_vector = self.vectorizer.transform([custom_text])
+            prediction = self.model.predict(custom_text_vector)[0]
+            self.label_text_result.config(text=f"Predicted Sentiment: {prediction.capitalize()}")
+            self.label_airline_result.config(text="")
+        else:
+            messagebox.showerror("Error", "Please enter some custom text.")        
 
     def show_overall_sentiment_trend(self):
         grouped_data = self.dataset.groupby('tweet_created')['airline_sentiment'].value_counts(normalize=True).unstack()
@@ -188,29 +211,6 @@ class SentimentAnalyzerGUI:
         plt.title("Sentiment Distribution")
         plt.show()
 
-    def identify_emerging_trends(self):
-        # Implement code to identify and display emerging trends or issues based on the analysis of social media posts or comments
-        if self.dataset is None:
-            messagebox.showerror("Error", "Please load a dataset first.")
-            return
-
-        all_tweets = ' '.join(self.dataset['text'].tolist())
-        blob = TextBlob(all_tweets)
-        noun_phrases = blob.noun_phrases
-        phrase_counts = {}
-        for phrase in noun_phrases:
-            if phrase in phrase_counts:
-                phrase_counts[phrase] += 1
-            else:
-                phrase_counts[phrase] = 1
-
-        # Sort noun phrases by their occurrence count
-        sorted_phrases = sorted(phrase_counts.items(), key=lambda x: x[1], reverse=True)
-
-        # Display the top 10 noun phrases
-        result = '\n'.join([f'{phrase}: {count}' for phrase, count in sorted_phrases[:10]])
-        messagebox.showinfo("Emerging Trends or Issues", result)
-
     def save_results(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if file_path:
@@ -228,39 +228,57 @@ if __name__ == "__main__":
     app.run()
 
 
-# In[1]:
-
-
-pip install nbconvert pyinstaller
-
-
-# In[3]:
+# In[ ]:
 
 
 import os
 import subprocess
 
-# Path to the Documents folder on your PC
-documents_path = os.path.expanduser("~/Documents")
+# Function to convert IPython Notebook to Python script
+def convert_ipynb_to_py(notebook_filename):
+    try:
+        subprocess.run(["jupyter", "nbconvert", "--to", "script", notebook_filename])
+        print("Conversion from IPython Notebook to Python script completed.")
+    except Exception as e:
+        print("An error occurred during conversion:", e)
 
-# Path to the GitHub folder within the Documents folder
-github_path = os.path.join(documents_path, "GitHub")
+# Specify the filename of the IPython Notebook
+notebook_filename = "gui.ipynb"
 
-# Path to the sentimentanalysis folder within the GitHub folder
-sentiment_analysis_path = os.path.join(github_path, "sentiment-Analysis")
+# Convert IPython Notebook to Python script
+convert_ipynb_to_py(notebook_filename)
 
-# Change directory to sentimentanalysis folder
-os.chdir(sentiment_analysis_path)
+# Specify Python script filename (same name as notebook)
+py_filename = os.path.splitext(notebook_filename)[0] + ".py"
 
-# Convert the Jupyter Notebook to executable using nbconvert
-subprocess.run(["jupyter", "nbconvert", "--to", "script", "gui.ipynb"])
-subprocess.run(["pyinstaller", "--onefile", "--noconsole", "gui.py"])
-
-print("Conversion to executable completed.")
+print("Python script filename:", py_filename)
 
 
 # In[ ]:
 
 
+import os
+import subprocess
 
+# Function to create executable from Python script
+def create_exe_from_py(py_filename):
+    try:
+        subprocess.run(["pyinstaller", "--onefile", "--noconsole", py_filename])
+        print("Conversion from Python script to executable completed.")
+    except Exception as e:
+        print("An error occurred during conversion:", e)
+
+# Specify the filename of the Python script
+py_filename = "gui.py"  # Change this to the filename of your Python script
+
+# Create executable from Python script
+create_exe_from_py(py_filename)
+
+# Rename the executable to match the Python script name
+try:
+    exe_filename = os.path.splitext(py_filename)[0] + ".exe"
+    os.rename("gui.exe", exe_filename)
+    print("Renamed executable to match the Python script name.")
+except Exception as e:
+    print("An error occurred during renaming:", e)
 
