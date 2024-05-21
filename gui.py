@@ -94,6 +94,9 @@ class SentimentAnalyzerGUI:
         
         self.label_text_result = ttk.Label(self.root, text="")
         self.label_text_result.grid(row=7, column=0, columnspan=3, padx=10, pady=5)
+
+        self.label_airline_result = ttk.Label(self.root, text="")
+        self.label_text_result.grid(row=8, column=0, columnspan=3, padx=10, pady=5)
         
         # Initialize attributes
         self.dataset = pd.read_csv("Tweets.csv") 
@@ -138,16 +141,26 @@ class SentimentAnalyzerGUI:
 
         else:
             messagebox.showerror("Error", "Please enter the name of an airline or some custom text.")
-            
+
+    
     def analyze_text_sentiment(self):
         custom_text = self.entry_custom_text.get()
         if custom_text:
             custom_text_vector = self.vectorizer.transform([custom_text])
             prediction = self.model.predict(custom_text_vector)[0]
-            self.label_text_result.config(text=f"Predicted Sentiment: {prediction.capitalize()}")
-            self.label_airline_result.config(text="")
+            relevant_data = self.dataset[self.dataset['text'] == custom_text]
+            print("Relevant Data:", relevant_data)  # Debugging statement
+            if not relevant_data.empty:
+                negative_reason = relevant_data['negativereason'].iloc[0]
+                print("Negative Reason:", negative_reason)  
+                self.label_text_result.config(text=f"Predicted Sentiment: {prediction.capitalize()}")
+                self.label_airline_result.config(negativereason=f"Negative Reason: {negativereason}")
+            else:
+                self.label_text_result.config(text=f"Predicted Sentiment: {prediction.capitalize()}")
+                self.label_airline_result.config(text="No relevant negative reason found in the dataset.")
         else:
-            messagebox.showerror("Error", "Please enter some custom text.")        
+            messagebox.showerror("Error", "Please enter some custom text.")
+
 
     def show_overall_sentiment_trend(self):
         grouped_data = self.dataset.groupby('tweet_created')['airline_sentiment'].value_counts(normalize=True).unstack()
@@ -252,33 +265,4 @@ convert_ipynb_to_py(notebook_filename)
 py_filename = os.path.splitext(notebook_filename)[0] + ".py"
 
 print("Python script filename:", py_filename)
-
-
-# In[ ]:
-
-
-import os
-import subprocess
-
-# Function to create executable from Python script
-def create_exe_from_py(py_filename):
-    try:
-        subprocess.run(["pyinstaller", "--onefile", "--noconsole", py_filename])
-        print("Conversion from Python script to executable completed.")
-    except Exception as e:
-        print("An error occurred during conversion:", e)
-
-# Specify the filename of the Python script
-py_filename = "gui.py"  # Change this to the filename of your Python script
-
-# Create executable from Python script
-create_exe_from_py(py_filename)
-
-# Rename the executable to match the Python script name
-try:
-    exe_filename = os.path.splitext(py_filename)[0] + ".exe"
-    os.rename("gui.exe", exe_filename)
-    print("Renamed executable to match the Python script name.")
-except Exception as e:
-    print("An error occurred during renaming:", e)
 
